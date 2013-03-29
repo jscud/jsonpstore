@@ -19,34 +19,41 @@ var JsonPStore = JsonPStore || {
   callbackCounter: 0
 };
 
-JsonPStore.addScript_ = function(src) {
+JsonPStore.HOST = '//localhost:9182/';
+
+JsonPStore.call_ = function(path, params, callback) {
+  // Build the request URL.
+  var url = [JsonPStore.HOST, path, '?c=', JsonPStore.callbackCounter];
+  for (var paramName in params) {
+    if (params.hasOwnProperty(paramName)) {
+      url = url.concat(['&', encodeURIComponent(paramName), '=',
+                        encodeURIComponent(params[paramName])]);
+    }
+  }
+
+  // Set a named callback so the JSONP response can trigger the callback.
+  JsonPStore.callbacks['cb' + JsonPStore.callbackCounter] = function(response) {
+    // Clean up the reference to prevent a memory leak.
+    JsonPStore.callbacks['cb' + JsonPStore.callbackCounter] = null;
+    if (callback) {
+      callback(response);
+    }
+  }
+  
+  // Issue the request.
   var script = document.createElement('script');
-  script.src = src;
+  script.src = url.join('');
   script.type = 'text/javascript';
   var first = document.getElementsByTagName('script')[0];
   first.parentNode.insertBefore(script, first);
-}
 
-JsonPStore.addCallback_ = function(callback) {
-  // Set a named callback so the JSONP response can trigger the callback.
-  JsonPStore.callbacks['cb' + JsonPStore.callbackCounter] = function(stored) {
-    // Clean up the reference to prevent a memory leak.
-    JsonPStore.callbacks['cb' + JsonPStore.callbackCounter] = null;
-    callback(stored);
-  }
+  JsonPStore.callbackCounter++;
 };
 
 JsonPStore.set = function(key, value, callback) {
-  JsonPStore.addCallback_(callback);
-  JsonPStore.addScript_(['/set?k=', encodeURIComponent(key), 
-                         '&v=', encodeURIComponent(value),
-                         '&c=', JsonPStore.callbackCounter].join(''));
-  JsonPStore.callbackCounter++;
+  JsonPStore.call_('set', {k: key, v: value}, callback);
 }
 
 JsonPStore.get = function(key, callback) {
-  JsonPStore.addCallback_(callback);
-  JsonPStore.addScript_(['/get?k=', encodeURIComponent(key), 
-                         '&c=', JsonPStore.callbackCounter].join(''));
-  JsonPStore.callbackCounter++;
+  JsonPStore.call_('get', {k: key}, callback);
 }
