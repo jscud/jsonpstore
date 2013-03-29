@@ -1,0 +1,27 @@
+application: jsonpstore
+version: 1
+runtime: python27
+api_version: 1
+threadsafe: yes
+
+handlers:
+- url: /favicon\.ico
+  static_files: favicon.ico
+  upload: favicon\.ico
+
+- url: /api\.js
+  static_files: api.js
+  upload: api.js
+  mime_type: text/javascript
+
+- url: /demo\.html
+  static_files: demo.html
+  upload: demo.html
+  mime_type: text/html
+
+- url: .*
+  script: main.app
+
+libraries:
+- name: webapp2
+  version: "2.5.2"
