@@ -19,7 +19,7 @@ var JsonPStore = JsonPStore || {
   callbackCounter: 0
 };
 
-JsonPStore.HOST = '//localhost:9182/';
+JsonPStore.HOST = 'https://jsonpstore.appspot.com/';
 
 JsonPStore.call_ = function(path, params, callback) {
   // Build the request URL.
