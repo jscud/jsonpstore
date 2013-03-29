@@ -21,26 +21,47 @@ import webapp2
 
 from google.appengine.ext import db
 
+
 class Item(db.Model):
   data = db.TextProperty()
-  #owner = db.StringProperty()
+
 
 class Setter(webapp2.RequestHandler):
   def get(self):
     key = self.request.get('k')
     value = self.request.get('v')
     callback = self.request.get('c')
+
+    item = Item.get_or_insert(key_name=key)
+    item.data = value
+    item.put()
+
     self.response.out.write(
-      'JsonPStore.callbacks.cb' + callback + '(true);');
+      'JsonPStore.callbacks.cb%s(true);' % (callback,));
     self.response.content_type = 'text/javascript';
+
 
 class Getter(webapp2.RequestHandler):
   def get(self):
-    pass
+    key = self.request.get('k')
+    callback = self.request.get('c')
+   
+    item = Item.get_by_key_name(key_names=key)
+
+    if item:
+      self.response.out.write(
+        'JsonPStore.callbacks.cb%s(\'%s\');' % (callback, item.data))
+    else:
+      self.response.out.write(
+        'JsonPStore.callbacks.cb%s(null);' % (callback,))
+
+    self.response.content_type = 'text/javascript';
+
 
 class SignIn(webapp2.RequestHandler):
   def get(self):
     pass
+
 
 app = webapp2.WSGIApplication([('/set', Setter),
                                ('/get', Getter),

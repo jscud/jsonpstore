@@ -27,15 +27,26 @@ JsonPStore.addScript_ = function(src) {
   first.parentNode.insertBefore(script, first);
 }
 
-JsonPStore.set = function(key, value, callback) {
+JsonPStore.addCallback_ = function(callback) {
   // Set a named callback so the JSONP response can trigger the callback.
   JsonPStore.callbacks['cb' + JsonPStore.callbackCounter] = function(stored) {
     // Clean up the reference to prevent a memory leak.
     JsonPStore.callbacks['cb' + JsonPStore.callbackCounter] = null;
     callback(stored);
   }
+};
+
+JsonPStore.set = function(key, value, callback) {
+  JsonPStore.addCallback_(callback);
   JsonPStore.addScript_(['/set?k=', encodeURIComponent(key), 
                          '&v=', encodeURIComponent(value),
+                         '&c=', JsonPStore.callbackCounter].join(''));
+  JsonPStore.callbackCounter++;
+}
+
+JsonPStore.get = function(key, callback) {
+  JsonPStore.addCallback_(callback);
+  JsonPStore.addScript_(['/get?k=', encodeURIComponent(key), 
                          '&c=', JsonPStore.callbackCounter].join(''));
   JsonPStore.callbackCounter++;
 }
